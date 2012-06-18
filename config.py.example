@@ -1,0 +1,14 @@
+config = {
+  "rpchost": "localhost",
+  "rpcport": 8332,
+  "rpcpath": "/",
+  "rpcusername": "rpcuser",
+  "rpcpassword": "rpcpass",
+  "bindip": "",
+  "bindport": 8338,
+  "pubkeyfile": "server.cert",
+  "privkeyfile": "server.pem",
+  "users": {
+    "webuser:webpass": "fullaccess",
+  },
+}

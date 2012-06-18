@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!--
+  Bitcoin WebUI
+  Copyright (C) 2012 Michael Sparmann (TheSeven)
+
+     This program is free software; you can redistribute it and/or
+     modify it under the terms of the GNU General Public License
+     as published by the Free Software Foundation; either version 2
+     of the License, or (at your option) any later version.
+
+     This program is distributed in the hope that it will be useful,
+     but WITHOUT ANY WARRANTY; without even the implied warranty of
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+     GNU General Public License for more details.
+
+     You should have received a copy of the GNU General Public License
+     along with this program; if not, write to the Free Software
+     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
+  Please consider donating to 14HtZ9MmCginBWqdELnqAKA7vF4qbn7R9d
+  if you want to support further development of Bitcoin WebUI.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemalocation="http://www.w3.org/MarkUp/SCHEMA/xhtml11.xsd" xml:lang="en-US">
+  <head>
+    <title>Bitcoin WebUI</title>
+    <link rel="stylesheet" type="text/css"
+          href="//ajax.googleapis.com/ajax/libs/dojo/1.7.1/dijit/themes/claro/claro.css"/>
+    <link rel="stylesheet" type="text/css" href="style.css"/>
+    <script type="text/javascript" defer="defer" data-dojo-config="async: true, parseOnLoad: true"
+            src="//ajax.googleapis.com/ajax/libs/dojo/1.7.2/dojo/dojo.js"></script>
+    <script type="text/javascript" defer="defer" src="bcrpc.js"></script>
+    <script type="text/javascript" defer="defer" src="ui.js"></script>
+  </head>
+  <body class="claro">
+    <div id="loadingPlaceholder">
+      Loading Bitcoin WebUI...
+    </div>
+    <div id="rootContainer" data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="gutters: false">
+
+
+      <div data-dojo-type="dijit.MenuBar" data-dojo-props="region: 'top'">
+
+        <div data-dojo-type="dijit.MenuBarItem" id="refreshButton">
+          Refresh
+          <script type="dojo/connect" data-dojo-event="onClick" data-dojo-args="evt">
+            refreshAccountList();
+          </script>
+        </div>
+
+        <div data-dojo-type="dijit.MenuBarItem">
+          Import keys
+          <script type="dojo/connect" data-dojo-event="onClick" data-dojo-args="evt">
+            dijit.byId("importKeysDialog").show();
+          </script>
+        </div>
+
+        <div data-dojo-type="dijit.MenuBarItem">
+          Verify signature
+          <script type="dojo/connect" data-dojo-event="onClick" data-dojo-args="evt">
+            dijit.byId("verifySignatureDialog").show();
+          </script>
+        </div>
+
+        <div data-dojo-type="dijit.MenuBarItem">
+          Encryption
+          <script type="dojo/connect" data-dojo-event="onClick" data-dojo-args="evt">
+            showEncryptionDialog();
+          </script>
+        </div>
+
+        <div data-dojo-type="dijit.MenuBarItem" id="lockWalletButton">
+          Lock wallet
+          <script type="dojo/connect" data-dojo-event="onClick" data-dojo-args="evt">
+            lockWallet();
+          </script>
+        </div>
+
+        <div data-dojo-type="dijit.MenuBarItem">
+          About
+          <script type="dojo/connect" data-dojo-event="onClick" data-dojo-args="evt">
+            dijit.byId("aboutDialog").show();
+          </script>
+        </div>
+
+        <div data-dojo-type="dijit.MenuBarItem">
+          Donate
+          <script type="dojo/connect" data-dojo-event="onClick" data-dojo-args="evt">
+            showDonateDialog();
+          </script>
+        </div>
+
+        <div data-dojo-type="dijit.MenuBarItem" data-dojo-props="disabled: true" style="float: right;">
+          Balance:
+          <span id="currentWalletBalance">
+            Unknown
+          </span>
+        </div>
+
+        <div data-dojo-type="dijit.MenuBarItem" style="float: right;">
+          Keypool:
+          <span id="currentKeypoolSize">
+            Unknown
+          </span>
+          <script type="dojo/connect" data-dojo-event="onClick" data-dojo-args="evt">
+            refillKeyPool();
+          </script>
+        </div>
+
+        <div data-dojo-type="dijit.MenuBarItem" data-dojo-props="disabled: true" style="float: right;">
+          Difficulty:
+          <span id="currentDifficulty">
+            Unknown
+          </span>
+        </div>
+
+        <div data-dojo-type="dijit.MenuBarItem" data-dojo-props="disabled: true" style="float: right;">
+          Blocks:
+          <span id="currentBlocks">
+            Unknown
+          </span>
+        </div>
+
+        <div data-dojo-type="dijit.MenuBarItem" data-dojo-props="disabled: true" style="float: right;">
+          Connections:
+          <span id="currentConnections">
+            Unknown
+          </span>
+        </div>
+
+      </div>
+
+
+      <div data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'center'">
+
+        <div data-dojo-type="dijit.layout.ContentPane" title="Accounts">
+
+          <div data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="persist: true">
+
+            <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'left', splitter: true">
+              <div data-dojo-props="data: {identifier: 'id', label: 'label', items: []}"
+                   data-dojo-type="dojo.data.ItemFileWriteStore" data-dojo-id="accountStore">
+              </div>
+              <div data-dojo-props="store: accountStore, query: {}, childrenAttrs: ['children']"
+                   data-dojo-type="dijit.tree.ForestStoreModel" data-dojo-id="accountModel">
+              </div>
+              <div data-dojo-props="showRoot: false, model: accountModel, _createTreeNode: createAccountTreeNode,
+                                    dndController: dijit.tree.dndSource, checkItemAcceptance: accountTreeDNDGovernor,
+                                    onDndDrop: accountTreeDNDHandler"
+                   data-dojo-type="dijit.Tree" id="accountTree" style="font-size: 80%;">
+                <script type="dojo/connect" data-dojo-event="onClick" data-dojo-args="item">
+                  accountTreeClickHandler(item);
+                </script>
+              </div>
+                <ul data-dojo-type="dijit.Menu" style="display: none;"
+                    data-dojo-props="selector: '.dijitTreeNode', targetNodeIds: ['accountTree']">
+                  <script type="dojo/connect" data-dojo-event="_openMyself" data-dojo-args="args">
+                    accountContextMenuInitializer(args);
+                  </script>
+                  <li data-dojo-type="dijit.MenuItem" id="accountContextMenuCopyToClipboard">
+                    <span style="font-weight: bold;">Copy</span> to clipboard
+                    <script type="dojo/connect" data-dojo-event="onClick">
+                      if (accountContextMenuTarget[1]) copyText(accountContextMenuTarget[1]);
+                    </script>
+                  </li>
+                  <li data-dojo-type="dijit.MenuItem" id="accountContextMenuSendBitcoins">
+                    <span style="font-weight: bold;">Send coins</span> from this account
+                    <script type="dojo/connect" data-dojo-event="onClick">
+                      showSendBitcoinsDialog(accountContextMenuTarget[1] ? accountContextMenuTarget[1] : "", null);
+                    </script>
+                  </li>
+                  <li data-dojo-type="dijit.MenuItem" id="accountContextMenuMoveFunds">
+                    <span style="font-weight: bold;">Move funds</span> from this to another account
+                    <script type="dojo/connect" data-dojo-event="onClick">
+                      showMoveFundsDialog(accountContextMenuTarget[1] ? accountContextMenuTarget[1] : "", null);
+                    </script>
+                  </li>
+                  <li data-dojo-type="dijit.MenuItem" id="accountContextMenuCreateNewAddress">
+                    Create <span style="font-weight: bold;">new address</span> for this account
+                    <script type="dojo/connect" data-dojo-event="onClick">
+                      createNewAddressForAccount(accountContextMenuTarget[1] ? accountContextMenuTarget[1] : "");
+                    </script>
+                  </li>
+                  <li data-dojo-type="dijit.MenuItem" id="accountContextMenuCreateNewAccount">
+                    Create <span style="font-weight: bold;">new account</span>
+                    <span id="accountContextMenuCreateNewAccountBasedOnAddress">based on this address</span>
+                    <script type="dojo/connect" data-dojo-event="onClick">
+                      showCreateNewAccountDialog(accountContextMenuTarget ? accountContextMenuTarget[1] : null);
+                    </script>
+                  </li>
+                  <li data-dojo-type="dijit.MenuItem" id="accountContextMenuSignMessage">
+                    <span style="font-weight: bold;">Sign message</span> using address private key
+                    <script type="dojo/connect" data-dojo-event="onClick">
+                      showSignMessageDialog(accountContextMenuTarget[1]);
+                    </script>
+                  </li>
+                  <li data-dojo-type="dijit.MenuItem" id="accountContextMenuExportKey">
+                    <span style="font-weight: bold;">Export</span> address private key
+                    <script type="dojo/connect" data-dojo-event="onClick">
+                      showExportKeyDialog(accountContextMenuTarget[1]);
+                    </script>
+                  </li>
+                </ul>
+            </div>
+
+            <div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'center'">
+              <div id="transactionContainer" onscroll="transactionListScrollHandler();"
+                   style="height: 100%; width: 100%; overflow: auto; font-size: 80%;">
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div data-dojo-type="dojo.store.Memory" data-dojo-id="accountNameStore"></div>
+
+
+      <div id="errorDialog" data-dojo-type="dijit.Dialog" title="Error:">
+        An error occurred:<br/>
+        <div id="errorMessage" style="white-space: pre-wrap;">
+        </div>
+        <script type="dojo/connect" data-dojo-event="onHide">
+          if (this.callback) this.callback(this.context);
+        </script>
+      </div>
+
+      <div id="copyTextDialog" data-dojo-type="dijit.Dialog" title="Copy text">
+        <input type="text" data-dojo-type="dijit.form.TextBox" id="copyTextDialogValueBox"/>
+      </div>
+
+      <div id="importKeysDialog" data-dojo-type="dijit.Dialog" title="Import private keys">
+        <div data-dojo-type="dijit.form.Form" id="importKeysForm">
+          <div data-dojo-type="dojox.layout.TableContainer"
+              data-dojo-props="customClass: 'alignLabelRight', labelWidth: '15ex'">
+            <div data-dojo-type="dijit.layout.ContentPane" title="Private key:">
+              <textarea name="keys" data-dojo-type="dijit.form.Textarea" cols="60"></textarea>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane">
+              <button data-dojo-type="dijit.form.Button" type="submit" id="importKeysButton">
+                Import private keys (one per line)
+              </button>
+            </div>
+          </div>
+          <script type="dojo/method" data-dojo-event="onSubmit">
+            importKeysFormSubmitHandler(this);
+            return false;
+          </script>
+        </div>
+      </div>
+
+      <div id="exportKeyDialog" data-dojo-type="dijit.Dialog" title="Export private key">
+        The private key for address
+        <span style="font-weight: bold;" id="exportKeyDialogAddressField"></span>
+        is:<br/>
+        <span style="font-weight: bold;" id="exportKeyDialogPrivateKeyField"></span>
+      </div>
+
+      <div id="verifySignatureDialog" data-dojo-type="dijit.Dialog" title="Verify message signature">
+        <div data-dojo-type="dijit.form.Form" id="verifySignatureForm">
+          <div data-dojo-type="dojox.layout.TableContainer"
+               data-dojo-props="customClass: 'alignLabelRight', labelWidth: '15ex'">
+            <div data-dojo-type="dijit.layout.ContentPane" title="Address:">
+              <input type="text" name="address" required="true"
+                     data-dojo-type="dijit.form.ValidationTextBox" style="width: 40ex;"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane" title="Signature:">
+              <input type="text" name="signature" required="true"
+                     data-dojo-type="dijit.form.ValidationTextBox" style="width: 40ex;"/>
+            </div>
+          </div>
+          Message:<br/>
+          <textarea name="message" data-dojo-type="dijit.form.Textarea" style="width: 100%;"></textarea><br/>
+          <button data-dojo-type="dijit.form.Button" type="submit" id="verifySignatureButton">
+            Verify message signature
+          </button>
+          <script type="dojo/method" data-dojo-event="onSubmit">
+            verifySignatureFormSubmitHandler(this);
+            return false;
+          </script>
+          <div style="display: none" id="verifySignatureResultArea">
+            <span style="font-weight: bold;">Result:</span><br/>
+            <div id="verifySignatureValidityField"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="signMessageDialog" data-dojo-type="dijit.Dialog" title="Sign message">
+        <div data-dojo-type="dijit.form.Form" id="signMessageForm">
+          The following message will be signed using address
+          <span style="font-weight: bold;" id="signMessageDialogAddressField"></span><br/>
+          <textarea name="message" data-dojo-type="dijit.form.Textarea" style="width: 100%;"></textarea><br/>
+          <button data-dojo-type="dijit.form.Button" type="submit" id="signMessageButton">
+            Generate signature
+          </button>
+          <script type="dojo/method" data-dojo-event="onSubmit">
+            signMessageFormSubmitHandler(this);
+            return false;
+          </script>
+          <div style="display: none" id="signMessageSignatureArea">
+            <span style="font-weight: bold;">Signature:</span><br/>
+            <div id="signMessageSignatureDataField"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sendBitcoinsDialog" data-dojo-type="dijit.Dialog" title="Send coins">
+        <div data-dojo-type="dijit.form.Form" id="sendBitcoinsForm">
+          <div data-dojo-type="dojox.layout.TableContainer"
+              data-dojo-props="customClass: 'alignLabelRight', labelWidth: '15ex'">
+            <div data-dojo-type="dijit.layout.ContentPane" title="Source account:">
+              <input type="text" data-dojo-type="dijit.form.FilteringSelect" name="sourceAccount"
+                     data-dojo-props="store: accountNameStore, searchAttr: 'name', isValid: acceptEverythingValidator"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane" title="Destination address:">
+              <input type="text" required="true" name="destinationAddress"
+                     data-dojo-type="dijit.form.ValidationTextBox"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane" title="Destination comment:">
+              <input type="text" data-dojo-type="dijit.form.TextBox" name="destinationComment"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane" title="Amount:">
+              <input type="text" data-dojo-type="dijit.form.CurrencyTextBox" name="amount"
+                     data-dojo-props="required: true, currency: 'BTC'"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane" title="Transaction comment:">
+              <input type="text" data-dojo-type="dijit.form.TextBox" name="transactionComment"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane">
+              <button data-dojo-type="dijit.form.Button" type="submit" id="sendBitcoinsButton">
+                Send bitcoins
+              </button>
+            </div>
+          </div>
+          <script type="dojo/method" data-dojo-event="onSubmit">
+            sendBitcoinsFormSubmitHandler(this);
+            return false;
+          </script>
+        </div>
+      </div>
+
+      <div id="transactionIdDialog" data-dojo-type="dijit.Dialog" title="Transaction has been submitted">
+        The transaction has been submitted. Its ID is
+        <span style="font-weight: bold;" id="transactionIdDialogIdField"></span>.
+      </div>
+
+      <div id="moveFundsDialog" data-dojo-type="dijit.Dialog" title="Move funds">
+        <div data-dojo-type="dijit.form.Form" id="moveFundsForm">
+          <div data-dojo-type="dojox.layout.TableContainer"
+              data-dojo-props="customClass: 'alignLabelRight', labelWidth: '15ex'">
+            <div data-dojo-type="dijit.layout.ContentPane" title="Source account:">
+              <input type="text" data-dojo-type="dijit.form.FilteringSelect" name="sourceAccount"
+                     data-dojo-props="store: accountNameStore, searchAttr: 'name', isValid: acceptEverythingValidator"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane" title="Destination account:">
+              <input type="text" data-dojo-type="dijit.form.FilteringSelect" name="destinationAccount"
+                     data-dojo-props="store: accountNameStore, searchAttr: 'name', isValid: acceptEverythingValidator"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane" title="Amount:">
+              <input type="text" data-dojo-type="dijit.form.CurrencyTextBox" name="amount"
+                     data-dojo-props="required: true, currency: 'BTC'"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane" title="Comment:">
+              <input type="text" data-dojo-type="dijit.form.TextBox" name="comment"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane">
+              <button data-dojo-type="dijit.form.Button" type="submit" id="moveFundsButton">
+                Move funds
+              </button>
+            </div>
+          </div>
+          <script type="dojo/method" data-dojo-event="onSubmit">
+            moveFundsFormSubmitHandler(this);
+            return false;
+          </script>
+        </div>
+      </div>
+
+      <div id="createNewAccountDialog" data-dojo-type="dijit.Dialog" title="Create new account">
+        <div data-dojo-type="dijit.form.Form" id="createNewAccountForm">
+          <div data-dojo-type="dojox.layout.TableContainer"
+              data-dojo-props="customClass: 'alignLabelRight', labelWidth: '15ex'">
+            <div data-dojo-type="dijit.layout.ContentPane" title="Account name:">
+              <input type="text" name="account" required="true"
+                     data-dojo-type="dijit.form.ValidationTextBox" style="width: 40ex;"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane" title="Initial address:">
+              <input type="text" name="address" data-dojo-type="dijit.form.TextBox" style="width: 40ex;"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane">
+              <button data-dojo-type="dijit.form.Button" type="submit" id="createNewAccountButton">
+                Create new account
+              </button>
+            </div>
+          </div>
+          <script type="dojo/method" data-dojo-event="onSubmit">
+            createNewAccountFormSubmitHandler(this);
+            return false;
+          </script>
+        </div>
+      </div>
+
+      <div id="unlockWalletDialog" data-dojo-type="dijit.Dialog" title="Unlock wallet">
+        <span style="font-weight: bold;">You need to unlock your wallet to proceed with this operation.</span>
+        <div data-dojo-type="dijit.form.Form" id="unlockWalletForm">
+          <div data-dojo-type="dojox.layout.TableContainer"
+              data-dojo-props="customClass: 'alignLabelRight', labelWidth: '15ex'">
+            <div data-dojo-type="dijit.layout.ContentPane" title="Wallet password:">
+              <input type="password" name="password" required="true" data-dojo-type="dijit.form.ValidationTextBox"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane" title="Remember for:">
+              <input type="text" name="timeout" required="true" value="300"
+                     data-dojo-type="dijit.form.NumberTextBox" constraints="{min: 0, max: 86400, places: 0}"/>
+              seconds
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane">
+              <button data-dojo-type="dijit.form.Button" type="submit" id="unlockWalletButton">
+                Unlock wallet
+              </button>
+            </div>
+          </div>
+          <script type="dojo/method" data-dojo-event="onSubmit">
+            unlockWalletFormSubmitHandler(this);
+            return false;
+          </script>
+        </div>
+        <script type="dojo/connect" data-dojo-event="onHide">
+          if (this.errorcallback) this.errorcallback(this.context, this.error);
+        </script>
+      </div>
+
+      <div id="encryptWalletDialog" data-dojo-type="dijit.Dialog" title="Encrypt wallet">
+        <div style="font-weight: bold;">
+          CAUTION: This operation is not reversible!
+        </div>
+        bitcoind will shut down after completing this operation.
+        <div data-dojo-type="dijit.form.Form" id="encryptWalletForm">
+          <div data-dojo-type="dojox.layout.TableContainer"
+              data-dojo-props="customClass: 'alignLabelRight', labelWidth: '15ex'">
+            <div data-dojo-type="dijit.layout.ContentPane" title="Wallet passphrase:">
+              <input type="password" name="password1" required="true" data-dojo-type="dijit.form.ValidationTextBox"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane" title="Verification:">
+              <input type="password" name="password2" required="true" data-dojo-type="dijit.form.ValidationTextBox"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane">
+              <button data-dojo-type="dijit.form.Button" type="submit" id="encryptWalletButton">
+                Encrypt wallet
+              </button>
+            </div>
+          </div>
+          <script type="dojo/method" data-dojo-event="onSubmit">
+            encryptWalletFormSubmitHandler(this);
+            return false;
+          </script>
+        </div>
+      </div>
+
+      <div id="changePassphraseDialog" data-dojo-type="dijit.Dialog" title="Change wallet passphrase">
+        <div data-dojo-type="dijit.form.Form" id="changePassphraseForm">
+          <div data-dojo-type="dojox.layout.TableContainer"
+              data-dojo-props="customClass: 'alignLabelRight', labelWidth: '15ex'">
+            <div data-dojo-type="dijit.layout.ContentPane" title="Old passphrase:">
+              <input type="password" name="oldpassword" required="true" data-dojo-type="dijit.form.ValidationTextBox"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane" title="New passphrase:">
+              <input type="password" name="password1" required="true" data-dojo-type="dijit.form.ValidationTextBox"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane" title="Verification:">
+              <input type="password" name="password2" required="true" data-dojo-type="dijit.form.ValidationTextBox"/>
+            </div>
+            <div data-dojo-type="dijit.layout.ContentPane">
+              <button data-dojo-type="dijit.form.Button" type="submit" id="changePassphraseButton">
+                Change wallet passphrase
+              </button>
+            </div>
+          </div>
+          <script type="dojo/method" data-dojo-event="onSubmit">
+            changePassphraseFormSubmitHandler(this);
+            return false;
+          </script>
+        </div>
+      </div>
+
+      <div id="newAddressCreatedDialog" data-dojo-type="dijit.Dialog" title="New address created">
+        A new address for account
+        <span style="font-weight: bold;" id="newAddressCreatedDialogAccountField"></span>
+        has been created:<br/>
+        <span style="font-weight: bold;" id="newAddressCreatedDialogAddressField"></span>
+      </div>
+
+      <div id="aboutDialog" data-dojo-type="dijit.Dialog" title="About" style="width: 60ex;">
+        Bitcoin WebUI<br/>
+        Copyright (C) 2012 Michael Sparmann (TheSeven)<br/>
+        <br/>
+        This program is free software; you can redistribute it and/or
+        modify it under the terms of the GNU General Public License
+        as published by the Free Software Foundation; either version 2
+        of the License, or (at your option) any later version.<br/>
+        <br/>
+        This program is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU General Public License for more details.<br/>
+        <br/>
+        You should have received a copy of the GNU General Public License
+        along with this program; if not, write to the Free Software
+        Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.<br/>
+        <br/>
+        Please consider donating to 14HtZ9MmCginBWqdELnqAKA7vF4qbn7R9d
+        if you want to support further development of Bitcoin WebUI.
+      </div>
+
+    </div>
+    <noscript>
+      Sorry, this web application heavily relies on Javascript, which is either
+      disabled or not supported by your browser. Please enable the execution
+      of Javascript in your browser's security settings.
+    </noscript>
+  </body>
+</html>
