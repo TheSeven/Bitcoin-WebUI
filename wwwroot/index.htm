@@ -325,7 +325,7 @@
             </div>
             <div data-dojo-type="dijit.layout.ContentPane" title="Amount:">
               <input type="text" data-dojo-type="dijit.form.CurrencyTextBox" name="amount"
-                     data-dojo-props="required: true, currency: 'BTC'"/>
+                     data-dojo-props="required: true, currency: 'BTC', constraints: {places: '2,8'}"/>
             </div>
             <div data-dojo-type="dijit.layout.ContentPane" title="Transaction comment:">
               <input type="text" data-dojo-type="dijit.form.TextBox" name="transactionComment"/>
@@ -362,7 +362,7 @@
             </div>
             <div data-dojo-type="dijit.layout.ContentPane" title="Amount:">
               <input type="text" data-dojo-type="dijit.form.CurrencyTextBox" name="amount"
-                     data-dojo-props="required: true, currency: 'BTC'"/>
+                     data-dojo-props="required: true, currency: 'BTC', constraints: {places: '2,8'}"/>
             </div>
             <div data-dojo-type="dijit.layout.ContentPane" title="Comment:">
               <input type="text" data-dojo-type="dijit.form.TextBox" name="comment"/>
