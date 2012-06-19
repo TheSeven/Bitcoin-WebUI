@@ -258,6 +258,7 @@ function getMoreTransactions(callback)
         var typeField = makeTransactionField(row2, "left", "9ex", false, result[i].category);
         var feeField = makeTransactionField(row2, "right", "12ex", false, formattedFee);
         var addressField = makeTransactionField(row2, "right", "40ex", false, result[i].address);
+        if (!result[i].to) result[i].to = addressToAccount[result[i].address];
         var toField = makeTransactionField(row2, null, null, true, result[i].to);
         txnRow.appendChild(row2);
         container.appendChild(txnRow);
