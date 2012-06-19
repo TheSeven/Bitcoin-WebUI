@@ -19,11 +19,20 @@ Please consider donating to 14HtZ9MmCginBWqdELnqAKA7vF4qbn7R9d
 if you want to support further development of Bitcoin WebUI.
 
 
+Overview
+========
+
+Bitcoin WebUI is a JavaScript web interface for bitcoind, allowing to access
+most of bitcoind's RPC functions through an easy to use web interface if you
+don't want to run bitcoin-qt locally or just prefer a web interface.
+
+
 System Requirements
 ===================
 
 Bitcoin WebUI requires Python >= 2.6, most testing is done with Python 3.2.
 The required Python modules should usually be installed by default.
+Bitcoin WebUI uses bitcoind as a backend via its RPC interface.
 
 
 Getting started
@@ -33,4 +42,5 @@ Getting started
 2. Adjust configuration settings as neccessary
 3. Generate SSL certificate for the web server:
    openssl req -new -newkey rsa:1024 -days 365 -nodes -x509 -keyout server.pem -out server.cert
-4. Connect to http://localhost:8338 with your favorite web browser
+4. Run python webui.py
+5. Connect to http://localhost:8338 with your favorite web browser
