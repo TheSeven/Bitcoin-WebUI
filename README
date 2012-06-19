@@ -43,4 +43,4 @@ Getting started
 3. Generate SSL certificate for the web server:
    openssl req -new -newkey rsa:1024 -days 365 -nodes -x509 -keyout server.pem -out server.cert
 4. Run python webui.py
-5. Connect to http://localhost:8338 with your favorite web browser
+5. Connect to https://localhost:8338 with your favorite web browser
