@@ -44,7 +44,7 @@ def passthrough(webui, httprequest, path, privileges):
     "Content-Length": length,
   }
   try:
-    conn = http_client.HTTPConnection(webui.config.rpchost, webui.config.rpcport, True, 10)
+    conn = http_client.HTTPConnection(webui.config.rpchost, webui.config.rpcport, timeout=10)
     conn.request("POST", webui.config.rpcpath, data, headers)
     response = conn.getresponse()
     contenttype = response.getheader("content-type")
